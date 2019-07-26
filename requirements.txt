@@ -1,0 +1,14 @@
+# Install with parameter --user at end of pip3 install
+opencv-python==4.1.*
+requests==2.22.*
+keras==2.2.*
+tensorflow==1.14.*
+pillow==6.1.*
+numpy==1.16.*
+matplotlib==3.1.*
+yolo34py>=*
+pybluez>=0.*
+pyusb==1.0.*
+pynput==1.4.*
+readline==6.2.*
+libscrc>=0.1.*

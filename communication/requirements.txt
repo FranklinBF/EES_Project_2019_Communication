@@ -1,0 +1,6 @@
+# Install with parameter --user at end of pip3 install
+pybluez==0.*
+pyusb==1.0.*
+pynput==1.4.*
+readline==6.2.*
+libscrc==0.1.*
