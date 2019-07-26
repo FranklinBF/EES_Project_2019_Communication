@@ -1,0 +1,343 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256 {
+    OS LEJOS_OSEK {
+        STATUS = EXTENDED;
+        STARTUPHOOK = FALSE;
+        ERRORHOOK = FALSE;
+        SHUTDOWNHOOK = FALSE;
+        PRETASKHOOK = FALSE;
+        POSTTASKHOOK = FALSE;
+        USEGETSERVICEID = FALSE;
+        USEPARAMETERACCESS = FALSE;
+        USERESSCHEDULER = FALSE;
+    };
+
+    /* Definition of application mode */
+    APPMODE appmode1{};
+
+    //Counter
+    COUNTER System_Counter {
+        MINCYCLE = 1;
+        MAXALLOWEDVALUE = 10000;
+        TICKSPERBASE = 1;
+    };
+
+    //Alarm
+    ALARM alarm_new_speed {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Speed_Setter ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 10;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Data {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Data_Receiver ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 5;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Decision {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Decision_Maker ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 10;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_distance {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Distance_Task ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 50;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_right_line {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Right_Line_Task ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 10;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_left_line {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Left_Line_Task ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 9;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Intersection {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Intersection_Task ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 11;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Turn_Around {
+        COUNTER = System_Counter;
+        ACTION = ACTIVATETASK {
+            TASK = Turn_Around_Task ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 1;
+            CYCLETIME = 11;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Intersection_Tick {
+        COUNTER = System_Counter;
+        ACTION = SETEVENT {
+            TASK = Intersection_Task ;
+            EVENT = Intersection_Tick ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 50;
+            CYCLETIME = 25;
+            APPMODE = appmode1;
+        };
+    };
+
+    ALARM alarm_Turn_Around_Tick {
+        COUNTER = System_Counter;
+        ACTION = SETEVENT {
+            TASK = Turn_Around_Task ;
+            EVENT = Turn_Around_Tick ;
+        };
+        AUTOSTART = TRUE {
+            ALARMTIME = 50;
+            CYCLETIME = 20;
+            APPMODE = appmode1;
+        };
+    };
+
+
+
+    //Events
+    EVENT Data {
+        MASK = AUTO ;
+    };
+    EVENT No_Data {
+        MASK = AUTO ;
+    };
+    EVENT Right_On_Line {
+        MASK = AUTO ;
+    };
+    EVENT Right_Line {
+        MASK = AUTO ;
+    };
+    EVENT Right_Clear {
+        MASK = AUTO ;
+    };
+    EVENT Left_On_Line {
+        MASK = AUTO ;
+    };
+    EVENT Left_Line {
+        MASK = AUTO ;
+    };
+    EVENT Left_Clear {
+        MASK = AUTO ;
+    };
+    EVENT Very_Close {
+        MASK = AUTO ;
+    };
+    EVENT Close {
+        MASK = AUTO ;
+    };
+    EVENT Getting_Closer {
+        MASK = AUTO ;
+    };
+    EVENT No_Obstacle {
+        MASK = AUTO ;
+    };
+    EVENT new_speed_angle {
+        MASK = AUTO ;
+    };
+    EVENT Turn_Left {
+        MASK = AUTO ;
+    };
+    EVENT Turn_Right {
+        MASK = AUTO ;
+    };
+    EVENT Intersection_Tick {
+        MASK = AUTO ;
+    };
+    EVENT Turn_Around_Event {
+        MASK = AUTO ;
+    };
+    EVENT Turn_Around_Tick {
+        MASK = AUTO ;
+    };
+
+    //Resources
+    RESOURCE received_data_resource{
+        RESOURCEPROPERTY = STANDARD ;
+    };
+    RESOURCE angle_speed_resource{
+        RESOURCEPROPERTY = STANDARD ;
+    };
+
+
+    //Tasks
+    TASK Speed_Setter {
+        AUTOSTART = FALSE ;
+        PRIORITY = 4;
+        ACTIVATION = 1;
+        SCHEDULE = NON;
+        STACKSIZE = 512;
+
+        EVENT = new_speed_angle ;
+
+        RESOURCE = angle_speed_resource ;
+    };
+
+    TASK Data_Receiver {
+        AUTOSTART = FALSE ;
+        PRIORITY = 1;
+        ACTIVATION = 1;
+        SCHEDULE = FULL;
+        STACKSIZE = 512;
+
+        EVENT = Data ;
+        EVENT = No_Data ;
+
+        RESOURCE = received_data_resource ;
+    };
+
+    TASK Sync_with_Server {
+        AUTOSTART = TRUE {
+            APPMODE= appmode1;
+        };
+        PRIORITY = 9 ;
+        ACTIVATION = 1 ;
+        SCHEDULE = FULL ;
+        STACKSIZE = 512 ;
+    };
+
+    TASK Decision_Maker {
+        AUTOSTART = FALSE ;
+        PRIORITY = 2;
+        ACTIVATION = 1;
+        SCHEDULE = NON;
+        STACKSIZE = 512;
+
+        EVENT = Data ;
+        EVENT = No_Data ;
+        EVENT = Right_On_Line ;
+        EVENT = Right_Line ;
+        EVENT = Right_Clear ;
+        EVENT = Left_On_Line ;
+        EVENT = Left_Line ;
+        EVENT = Left_Clear ;
+        EVENT = Very_Close ;
+        EVENT = Close ;
+        EVENT = Getting_Closer ;
+        EVENT = No_Obstacle ;
+        EVENT = new_speed_angle ;
+
+        EVENT = Turn_Around_Event ;
+        EVENT = Turn_Left ;
+        EVENT = Turn_Right ;
+
+        RESOURCE = angle_speed_resource ;
+        RESOURCE = received_data_resource ;
+    };
+
+
+    TASK Distance_Task {
+        AUTOSTART = FALSE ;
+        PRIORITY = 2;
+        ACTIVATION = 1;
+        SCHEDULE = NON;
+        STACKSIZE = 512;
+
+        EVENT = Very_Close ;
+        EVENT = Close ;
+        EVENT = Getting_Closer ;
+        EVENT = No_Obstacle ;
+    };
+
+
+    TASK Right_Line_Task {
+        AUTOSTART = FALSE ;
+        PRIORITY = 3;
+        ACTIVATION = 1;
+        SCHEDULE = NON;
+        STACKSIZE = 512;
+
+        EVENT = Right_On_Line ;
+        EVENT = Right_Line ;
+        EVENT = Right_Clear ;
+    };
+
+    TASK Left_Line_Task {
+        AUTOSTART = FALSE ;
+        PRIORITY = 3;
+        ACTIVATION = 1;
+        SCHEDULE = NON;
+        STACKSIZE = 512;
+
+        EVENT = Left_On_Line ;
+        EVENT = Left_Line ;
+        EVENT = Left_Clear ;
+    };
+
+    TASK Intersection_Task {
+        AUTOSTART = FALSE ;
+        PRIORITY = 5;
+        ACTIVATION = 1;
+        SCHEDULE = FULL;
+        STACKSIZE = 512;
+
+        EVENT = Turn_Left ;
+        EVENT = Turn_Right ;
+        EVENT = Intersection_Tick ;
+    };
+
+    TASK Turn_Around_Task {
+        AUTOSTART = FALSE ;
+        PRIORITY = 6;
+        ACTIVATION = 1;
+        SCHEDULE = FULL;
+        STACKSIZE = 512;
+
+        EVENT = Turn_Around_Event ;
+        EVENT = Turn_Around_Tick ;
+    };
+
+};
